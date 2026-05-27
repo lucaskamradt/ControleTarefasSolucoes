@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base de Conhecimento — Questor Folha</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0D0F14;--surface:#13161D;--surface2:#181C26;--border:#1E2333;--border2:#252C3F;
+  --text:#E4E8F5;--muted:#5C6480;--hint:#2A3048;
+  --accent:#4F8AFF;--accent2:#2D65E0;
+  --green:#2ECC8A;--green-bg:rgba(46,204,138,.1);
+  --red:#FF5570;--red-bg:rgba(255,85,112,.1);
+  --amber:#FFB84F;--amber-bg:rgba(255,184,79,.1);
+  --sql:#A8FF78;--sql-bg:rgba(30,40,20,.8);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.logo-badge{background:var(--accent);color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:600}
+.hdr-right{display:flex;align-items:center;gap:8px}
+
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 1.5rem;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 16px;font-size:13px;font-weight:600;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* LAYOUT */
+main{padding:1.25rem 1.5rem;max-width:1100px;margin:0 auto}
+
+/* BUSCA */
+.search-hero{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border2);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem}
+.search-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace;margin-bottom:.5rem}
+.search-row{display:flex;gap:8px}
+.search-input{flex:1;height:44px;padding:0 16px;background:var(--bg);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:15px;font-family:'Syne',sans-serif}
+.search-input:focus{outline:none;border-color:var(--accent)}
+.btn-search{height:44px;padding:0 20px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:background .15s}
+.btn-search:hover{background:var(--accent2)}
+.search-hint{font-size:11px;color:var(--muted);margin-top:.5rem;font-family:'JetBrains Mono',monospace}
+
+/* CARDS RESULTADO */
+.resultados{display:flex;flex-direction:column;gap:10px}
+.card-result{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem;cursor:pointer;transition:border-color .15s}
+.card-result:hover{border-color:var(--accent)}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:.6rem;flex-wrap:wrap}
+.card-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);background:rgba(79,138,255,.1);padding:2px 8px;border-radius:5px;white-space:nowrap}
+.card-titulo{font-size:14px;font-weight:600;flex:1;line-height:1.4}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:.5rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-bottom{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10px;padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-weight:600;border:1px solid}
+.tag-sql{background:rgba(168,255,120,.08);color:var(--sql);border-color:rgba(168,255,120,.2)}
+.tag-data{background:var(--hint);color:var(--muted);border-color:var(--border2)}
+.match-hl{background:rgba(79,138,255,.25);border-radius:2px;padding:0 2px}
+.empty-res{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
+
+/* FORM NOVO */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;gap:12px}
+.fg2{grid-template-columns:1fr 1fr}
+.lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;padding:8px 12px}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+.sql-area{font-family:'JetBrains Mono',monospace!important;font-size:12px!important;background:#0A1008!important;color:var(--sql)!important;border-color:rgba(168,255,120,.2)!important;min-height:120px}
+.sql-area:focus{border-color:var(--sql)!important}
+.redmine-row{display:flex;gap:8px}
+.redmine-row input{flex:1}
+.btn-buscar-rm{height:36px;padding:0 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.btn-buscar-rm:hover{border-color:var(--accent)}
+.rm-preview{background:var(--hint);border-radius:6px;padding:.5rem .75rem;font-size:12px;color:var(--muted);margin-top:4px;display:none;font-family:'JetBrains Mono',monospace}
+.rm-preview.show{display:block}
+.btn-salvar{height:40px;padding:0 24px;background:var(--green);border:none;border-radius:8px;color:#0A1008;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+.btn-salvar:hover{opacity:.9}
+.btn-danger{height:28px;padding:0 10px;background:var(--red-bg);border:1px solid rgba(255,85,112,.2);border-radius:6px;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace}
+
+/* CONFIG */
+.config-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.config-row input{flex:1;min-width:200px}
+.btn-config{height:36px;padding:0 16px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:720px;max-height:88vh;overflow-y:auto}
+.modal-head{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-close{width:30px;height:30px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-body{padding:1.25rem}
+.modal-section{margin-bottom:1.1rem}
+.modal-sec-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace;margin-bottom:.5rem}
+.modal-text{font-size:13px;line-height:1.7;color:var(--text)}
+.modal-sql{background:#0A1008;border:1px solid rgba(168,255,120,.15);border-radius:8px;padding:1rem;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sql);white-space:pre-wrap;word-break:break-word;overflow-x:auto}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.btn-edit{height:34px;padding:0 16px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+
+@media(max-width:600px){
+  .fg2{grid-template-columns:1fr}
+  header,main{padding:.85rem 1rem}
+  .tabs{padding:0 1rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    📚 Base de Conhecimento
+    <span class="logo-badge">FOLHA QUESTOR</span>
+  </div>
+  <div class="hdr-right">
+    <span id="totalBadge" style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace"></span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-tab="buscar" onclick="switchTab('buscar')">🔍 Buscar</button>
+  <button class="tab" data-tab="novo" onclick="switchTab('novo')">➕ Novo registro</button>
+  <button class="tab" data-tab="todos" onclick="switchTab('todos')">📋 Todos</button>
+  <button class="tab" data-tab="config" onclick="switchTab('config')">⚙ Configurações</button>
+</div>
+
+<main>
+
+<!-- BUSCAR -->
+<div id="pane-buscar">
+  <div class="search-hero">
+    <div class="search-label">Pesquisar na base de conhecimento</div>
+    <div class="search-row">
+      <input class="search-input" id="searchQ" type="text" placeholder="Ex: pensão judicial, exportação bancária, cálculo FGTS..." onkeydown="if(event.key==='Enter')buscar()">
+      <button class="btn-search" onclick="buscar()">Buscar</button>
+    </div>
+    <div class="search-hint">Pesquisa no título, problema, solução e comandos SQL</div>
+  </div>
+  <div id="searchResults"></div>
+</div>
+
+<!-- NOVO -->
+<div id="pane-novo" style="display:none">
+  <div class="card">
+    <div class="card-title">➕ Registrar novo atendimento</div>
+    <div class="form-grid">
+
+      <div>
+        <label class="lbl">Nº Redmine (Chapecó)</label>
+        <div class="redmine-row">
+          <input type="number" id="nRedmine" placeholder="Ex: 2346592">
+          <button class="btn-buscar-rm" onclick="buscarRedmine()">🔍 Buscar no Redmine</button>
+        </div>
+        <div class="rm-preview" id="rmPreview"></div>
+      </div>
+
+      <div>
+        <label class="lbl">Título / Resumo do problema</label>
+        <input type="text" id="nTitulo" placeholder="Ex: Pensão judicial — cálculo incorreto com adiantamento">
+      </div>
+
+      <div>
+        <label class="lbl">Descrição detalhada do problema</label>
+        <textarea id="nProblema" placeholder="Descreva o problema com detalhes — o que estava acontecendo, qual cliente, qual situação..."></textarea>
+      </div>
+
+      <div>
+        <label class="lbl">Paliativo / Solução utilizada</label>
+        <textarea id="nSolucao" placeholder="O que você fez para resolver ou contornar o problema..."></textarea>
+      </div>
+
+      <div>
+        <label class="lbl">Comando SQL utilizado</label>
+        <textarea class="sql-area" id="nSQL" placeholder="-- Cole aqui o comando SQL que você usou&#10;SELECT * FROM ..."></textarea>
+      </div>
+
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn-salvar" onclick="salvarRegistro()">💾 Salvar registro</button>
+      <span id="saveMsg" style="font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace"></span>
+    </div>
+  </div>
+</div>
+
+<!-- TODOS -->
+<div id="pane-todos" style="display:none">
+  <div class="card">
+    <div class="card-title">📋 Todos os registros</div>
+    <div id="listaTodos"></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="pane-config" style="display:none">
+  <div class="card">
+    <div class="card-title">⚙ Configurações</div>
+    <div style="margin-bottom:1rem">
+      <label class="lbl">Chave de API do Redmine</label>
+      <div class="config-row">
+        <input type="text" id="cfgApiKey" placeholder="Cole sua chave de API aqui..." style="font-family:'JetBrains Mono',monospace;font-size:12px">
+        <button class="btn-config" onclick="salvarConfig()">Salvar</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:.4rem;font-family:'JetBrains Mono',monospace">Salva localmente no navegador. Usada para buscar títulos no Redmine automaticamente.</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+      <label class="lbl">Exportar base de conhecimento</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:.4rem">
+        <button class="btn-config" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text)" onclick="exportarJSON()">📥 Exportar JSON</button>
+        <button class="btn-config" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text)" onclick="importarJSON()">📤 Importar JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="lerImport(event)">
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:.4rem;font-family:'JetBrains Mono',monospace">Faça backup periódico para não perder seus registros.</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+      <label class="lbl" style="color:var(--red)">Zona de perigo</label>
+      <button class="btn-danger" style="height:34px;margin-top:.4rem" onclick="limparTudo()">🗑 Apagar todos os registros</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAL DETALHE -->
+<div class="modal-bg" id="modalBg" onclick="fecharModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div style="font-size:14px;font-weight:700;flex:1;line-height:1.4" id="modalTit"></div>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'bc_questor_folha_v1';
+const API_KEY_KEY = 'bc_redmine_apikey';
+const BASE_REDMINE = 'https://redmine.questor.com.br';
+
+let registros = [];
+let editandoId = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+function init() {
+  try { registros = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ registros=[]; }
+  const key = localStorage.getItem(API_KEY_KEY);
+  if(key) document.getElementById('cfgApiKey').value = key;
+  atualizarTotal();
+}
+
+function salvar() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+  atualizarTotal();
+}
+
+function atualizarTotal() {
+  document.getElementById('totalBadge').textContent = registros.length + ' registros';
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+  ['buscar','novo','todos','config'].forEach(p => {
+    document.getElementById('pane-'+p).style.display = p===tab ? 'block' : 'none';
+  });
+  if(tab==='todos') renderTodos();
+  if(tab==='buscar') document.getElementById('searchQ').focus();
+}
+
+// ── BUSCAR NO REDMINE ──────────────────────────────────────────────────────
+async function buscarRedmine() {
+  const num = document.getElementById('nRedmine').value.trim();
+  if(!num) return;
+  const key = localStorage.getItem(API_KEY_KEY);
+  if(!key) { alert('Configure sua chave de API em ⚙ Configurações primeiro!'); switchTab('config'); return; }
+
+  const prev = document.getElementById('rmPreview');
+  prev.className = 'rm-preview show';
+  prev.textContent = '⏳ Buscando...';
+
+  try {
+    const res = await fetch(`${BASE_REDMINE}/issues/${num}.json?key=${key}`, {
+      headers:{'X-Redmine-API-Key': key}
+    });
+    if(!res.ok) throw new Error('Tarefa não encontrada');
+    const {issue} = await res.json();
+    prev.textContent = `✅ #${issue.id} — ${issue.subject}`;
+    prev.style.color = 'var(--green)';
+    // Auto-preenche o título se estiver vazio
+    if(!document.getElementById('nTitulo').value) {
+      document.getElementById('nTitulo').value = issue.subject;
+    }
+  } catch(e) {
+    prev.textContent = '❌ ' + e.message;
+    prev.style.color = 'var(--red)';
+  }
+}
+
+// ── SALVAR REGISTRO ────────────────────────────────────────────────────────
+function salvarRegistro() {
+  const titulo = document.getElementById('nTitulo').value.trim();
+  const problema = document.getElementById('nProblema').value.trim();
+  const solucao = document.getElementById('nSolucao').value.trim();
+  const sql = document.getElementById('nSQL').value.trim();
+  const redmine = document.getElementById('nRedmine').value.trim();
+
+  if(!titulo) { alert('Preencha o título do problema.'); return; }
+
+  if(editandoId) {
+    const idx = registros.findIndex(r => r.id === editandoId);
+    if(idx >= 0) {
+      registros[idx] = { ...registros[idx], titulo, problema, solucao, sql, redmine, atualizado: new Date().toISOString() };
+    }
+    editandoId = null;
+  } else {
+    registros.unshift({
+      id: Date.now(),
+      titulo, problema, solucao, sql, redmine,
+      criado: new Date().toISOString()
+    });
+  }
+
+  salvar();
+  limparForm();
+  const msg = document.getElementById('saveMsg');
+  msg.textContent = '✅ Salvo!';
+  setTimeout(() => msg.textContent = '', 2000);
+}
+
+function limparForm() {
+  ['nRedmine','nTitulo','nProblema','nSolucao','nSQL'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  const prev = document.getElementById('rmPreview');
+  prev.className = 'rm-preview';
+  editandoId = null;
+}
+
+// ── BUSCA INTELIGENTE ──────────────────────────────────────────────────────
+function buscar() {
+  const q = document.getElementById('searchQ').value.trim().toLowerCase();
+  const el = document.getElementById('searchResults');
+
+  if(!q) { el.innerHTML = ''; return; }
+
+  const termos = q.split(/\s+/).filter(Boolean);
+
+  const scored = registros.map(r => {
+    const texto = [r.titulo, r.problema, r.solucao, r.sql, r.redmine].join(' ').toLowerCase();
+    const score = termos.reduce((acc, t) => {
+      const matches = (texto.match(new RegExp(t, 'g')) || []).length;
+      // Peso maior se bate no título
+      const titleMatch = (r.titulo||'').toLowerCase().includes(t) ? 3 : 0;
+      return acc + matches + titleMatch;
+    }, 0);
+    return { r, score };
+  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score);
+
+  if(!scored.length) {
+    el.innerHTML = `<div class="empty-res">😕 Nenhum resultado para "<strong>${q}</strong>"<br><span style="font-size:12px;color:var(--muted)">Tente outras palavras ou registre esse problema!</span></div>`;
+    return;
+  }
+
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:.75rem">${scored.length} resultado${scored.length>1?'s':''} para "${q}"</div>` +
+    scored.map(({r}) => cardResult(r, q)).join('');
+}
+
+function highlight(texto, q) {
+  if(!texto || !q) return texto || '';
+  const termos = q.toLowerCase().split(/\s+/).filter(Boolean);
+  let result = texto;
+  termos.forEach(t => {
+    result = result.replace(new RegExp(t, 'gi'), m => `<span class="match-hl">${m}</span>`);
+  });
+  return result;
+}
+
+function cardResult(r, q='') {
+  const data = new Date(r.criado).toLocaleDateString('pt-BR');
+  const descPreview = r.problema ? r.problema.slice(0,150)+(r.problema.length>150?'...':'') : '';
+  return `<div class="card-result" onclick="abrirDetalhe(${r.id})">
+    <div class="card-top">
+      ${r.redmine ? `<span class="card-num">#${r.redmine}</span>` : ''}
+      <span class="card-titulo">${highlight(r.titulo, q)}</span>
+    </div>
+    ${descPreview ? `<div class="card-desc">${highlight(descPreview, q)}</div>` : ''}
+    <div class="card-bottom">
+      ${r.sql ? '<span class="tag tag-sql">SQL</span>' : ''}
+      <span class="tag tag-data">${data}</span>
+    </div>
+  </div>`;
+}
+
+// ── TODOS ─────────────────────────────────────────────────────────────────
+function renderTodos() {
+  const el = document.getElementById('listaTodos');
+  if(!registros.length) {
+    el.innerHTML = '<div class="empty-res">Nenhum registro ainda. Clique em ➕ Novo registro para começar!</div>';
+    return;
+  }
+  el.innerHTML = registros.map(r => cardResult(r)).join('');
+}
+
+// ── DETALHE MODAL ──────────────────────────────────────────────────────────
+function abrirDetalhe(id) {
+  const r = registros.find(x => x.id === id);
+  if(!r) return;
+
+  document.getElementById('modalTit').textContent = `${r.redmine ? '#'+r.redmine+' — ' : ''}${r.titulo}`;
+
+  const data = new Date(r.criado).toLocaleDateString('pt-BR');
+  const atualizado = r.atualizado ? ' · Atualizado ' + new Date(r.atualizado).toLocaleDateString('pt-BR') : '';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:1rem">Registrado em ${data}${atualizado}</div>
+
+    ${r.problema ? `<div class="modal-section">
+      <div class="modal-sec-title">📋 Descrição do problema</div>
+      <div class="modal-text">${r.problema.replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+
+    ${r.solucao ? `<div class="modal-section">
+      <div class="modal-sec-title">✅ Paliativo / Solução</div>
+      <div class="modal-text">${r.solucao.replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+
+    ${r.sql ? `<div class="modal-section">
+      <div class="modal-sec-title">💾 Comando SQL</div>
+      <div class="modal-sql">${escHtml(r.sql)}</div>
+      <button onclick="copiarSQL(${r.id})" style="margin-top:.5rem;height:28px;padding:0 12px;background:rgba(168,255,120,.1);border:1px solid rgba(168,255,120,.2);border-radius:6px;color:var(--sql);font-size:11px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace" id="btnCopy${r.id}">📋 Copiar SQL</button>
+    </div>` : ''}
+
+    ${r.redmine ? `<div class="modal-section">
+      <a href="https://redmine.questor.com.br/issues/${r.redmine}" target="_blank" style="color:var(--accent);font-size:12px;font-family:'JetBrains Mono',monospace">↗ Abrir tarefa #${r.redmine} no Redmine</a>
+    </div>` : ''}
+
+    <div class="modal-actions">
+      <button class="btn-edit" onclick="editarRegistro(${r.id})">✏️ Editar</button>
+      <button class="btn-danger" style="height:34px" onclick="excluirRegistro(${r.id})">🗑 Excluir</button>
+    </div>
+  `;
+
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function copiarSQL(id) {
+  const r = registros.find(x => x.id === id);
+  if(!r?.sql) return;
+  navigator.clipboard.writeText(r.sql).then(() => {
+    const btn = document.getElementById('btnCopy'+id);
+    if(btn){ btn.textContent = '✅ Copiado!'; setTimeout(()=>btn.textContent='📋 Copiar SQL',2000); }
+  });
+}
+
+function editarRegistro(id) {
+  const r = registros.find(x => x.id === id);
+  if(!r) return;
+  fecharModal();
+  switchTab('novo');
+  document.getElementById('nRedmine').value = r.redmine || '';
+  document.getElementById('nTitulo').value = r.titulo || '';
+  document.getElementById('nProblema').value = r.problema || '';
+  document.getElementById('nSolucao').value = r.solucao || '';
+  document.getElementById('nSQL').value = r.sql || '';
+  editandoId = id;
+  const prev = document.getElementById('rmPreview');
+  if(r.redmine){ prev.className='rm-preview show'; prev.textContent=`#${r.redmine} — editando`; prev.style.color='var(--amber)'; }
+  document.getElementById('saveMsg').textContent = '✏️ Editando registro...';
+}
+
+function excluirRegistro(id) {
+  if(!confirm('Excluir este registro? Esta ação não pode ser desfeita.')) return;
+  registros = registros.filter(r => r.id !== id);
+  salvar();
+  fecharModal();
+  renderTodos();
+}
+
+function fecharModal(e) {
+  if(e && e.target !== document.getElementById('modalBg')) return;
+  document.getElementById('modalBg').classList.remove('open');
+}
+
+function escHtml(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+function salvarConfig() {
+  const key = document.getElementById('cfgApiKey').value.trim();
+  if(key) localStorage.setItem(API_KEY_KEY, key);
+  alert('✅ Configurações salvas!');
+}
+
+function exportarJSON() {
+  const blob = new Blob([JSON.stringify(registros, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'base-conhecimento-questor-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importarJSON() { document.getElementById('importFile').click(); }
+
+function lerImport(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const dados = JSON.parse(ev.target.result);
+      if(!Array.isArray(dados)) throw new Error('Formato inválido');
+      if(!confirm(`Importar ${dados.length} registros? Isso vai ADICIONAR aos registros existentes.`)) return;
+      registros = [...dados, ...registros];
+      salvar();
+      alert('✅ Importado com sucesso!');
+    } catch(err) { alert('Erro ao importar: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function limparTudo() {
+  if(!confirm('⚠️ Isso vai apagar TODOS os registros. Tem certeza?')) return;
+  if(!confirm('Confirmação final: apagar tudo mesmo?')) return;
+  registros = [];
+  salvar();
+  alert('Base de conhecimento limpa.');
+}
+
+init();
+</script>
+</body>
+</html>
