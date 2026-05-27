@@ -160,6 +160,11 @@ textarea{resize:vertical;min-height:80px;line-height:1.6}
       </div>
 
       <div>
+        <label class="lbl">Nome interno da rotina</label>
+        <input type="text" id="nNomeInterno" placeholder="Ex: TnfpaDPCalculo, TnfpaPensaoJudicial...">
+      </div>
+
+      <div>
         <label class="lbl">Cliente</label>
         <input type="text" id="nCliente" placeholder="Ex: MN Contabilidade, Empresa XYZ...">
       </div>
@@ -177,6 +182,21 @@ textarea{resize:vertical;min-height:80px;line-height:1.6}
       <div>
         <label class="lbl">Comando SQL utilizado</label>
         <textarea class="sql-area" id="nSQL" placeholder="-- Cole aqui o comando SQL que você usou&#10;SELECT * FROM ..."></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="lbl">Status da correção</label>
+          <select id="nStatus">
+            <option value="sem_paliativo">❌ Não resolvida — sem paliativo</option>
+            <option value="com_paliativo">⚠️ Não resolvida — com paliativo</option>
+            <option value="resolvida">✅ Resolvida</option>
+          </select>
+        </div>
+        <div id="versaoWrap">
+          <label class="lbl">Versão da correção</label>
+          <input type="text" id="nVersao" placeholder="Ex: 26.6.0.0">
+        </div>
       </div>
 
     </div>
@@ -303,24 +323,27 @@ async function buscarRedmine() {
 // ── SALVAR REGISTRO ────────────────────────────────────────────────────────
 function salvarRegistro() {
   const titulo = document.getElementById('nTitulo').value.trim();
+  const nomeInterno = document.getElementById('nNomeInterno').value.trim();
   const cliente = document.getElementById('nCliente').value.trim();
   const problema = document.getElementById('nProblema').value.trim();
   const solucao = document.getElementById('nSolucao').value.trim();
   const sql = document.getElementById('nSQL').value.trim();
   const redmine = document.getElementById('nRedmine').value.trim();
+  const status = document.getElementById('nStatus').value;
+  const versao = document.getElementById('nVersao').value.trim();
 
   if(!titulo) { alert('Preencha o título do problema.'); return; }
 
   if(editandoId) {
     const idx = registros.findIndex(r => r.id === editandoId);
     if(idx >= 0) {
-      registros[idx] = { ...registros[idx], titulo, cliente, problema, solucao, sql, redmine, atualizado: new Date().toISOString() };
+      registros[idx] = { ...registros[idx], titulo, nomeInterno, cliente, problema, solucao, sql, redmine, status, versao, atualizado: new Date().toISOString() };
     }
     editandoId = null;
   } else {
     registros.unshift({
       id: Date.now(),
-      titulo, cliente, problema, solucao, sql, redmine,
+      titulo, nomeInterno, cliente, problema, solucao, sql, redmine, status, versao,
       criado: new Date().toISOString()
     });
   }
@@ -333,7 +356,10 @@ function salvarRegistro() {
 }
 
 function limparForm() {
-  ['nRedmine','nTitulo','nCliente','nProblema','nSolucao','nSQL'].forEach(id => {
+  ['nRedmine','nTitulo','nNomeInterno','nCliente','nProblema','nSolucao','nSQL','nVersao'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('nStatus').value = 'sem_paliativo';
     document.getElementById(id).value = '';
   });
   const prev = document.getElementById('rmPreview');
@@ -351,7 +377,7 @@ function buscar() {
   const termos = q.split(/\s+/).filter(Boolean);
 
   const scored = registros.map(r => {
-    const texto = [r.titulo, r.cliente, r.problema, r.solucao, r.sql, r.redmine].join(' ').toLowerCase();
+    const texto = [r.titulo, r.nomeInterno, r.cliente, r.problema, r.solucao, r.sql, r.redmine].join(' ').toLowerCase();
     const score = termos.reduce((acc, t) => {
       const matches = (texto.match(new RegExp(t, 'g')) || []).length;
       // Peso maior se bate no título
@@ -380,15 +406,26 @@ function highlight(texto, q) {
   return result;
 }
 
+function statusInfo(status) {
+  if(status==='resolvida') return {cor:'var(--green)',bg:'rgba(46,204,138,.08)',borda:'rgba(46,204,138,.2)',icone:'✅',txt:'Resolvida'};
+  if(status==='com_paliativo') return {cor:'var(--amber)',bg:'rgba(255,184,79,.08)',borda:'rgba(255,184,79,.2)',icone:'⚠️',txt:'Com paliativo'};
+  return {cor:'var(--red)',bg:'rgba(255,85,112,.08)',borda:'rgba(255,85,112,.2)',icone:'❌',txt:'Sem paliativo'};
+}
+
 function cardResult(r, q='') {
   const data = new Date(r.criado).toLocaleDateString('pt-BR');
   const descPreview = r.problema ? r.problema.slice(0,150)+(r.problema.length>150?'...':'') : '';
-  return `<div class="card-result" onclick="abrirDetalhe(${r.id})">
+  const st = statusInfo(r.status||'sem_paliativo');
+  const borderColor = r.status==='resolvida' ? 'rgba(46,204,138,.3)' : r.status==='com_paliativo' ? 'rgba(255,184,79,.2)' : 'var(--border)';
+  return `<div class="card-result" onclick="abrirDetalhe(${r.id})" style="border-color:${borderColor};background:${r.status==='resolvida'?'rgba(46,204,138,.03)':'var(--surface)'}">
     <div class="card-top">
       ${r.redmine ? `<span class="card-num">#${r.redmine}</span>` : ''}
       <span class="card-titulo">${highlight(r.titulo, q)}</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-weight:600;background:${st.bg};color:${st.cor};border:1px solid ${st.borda};white-space:nowrap">${st.icone} ${st.txt}</span>
     </div>
+    ${r.nomeInterno ? `<div style="font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-bottom:.4rem">🔧 ${highlight(r.nomeInterno, q)}</div>` : ''}
     ${r.cliente ? `<div style="font-size:11px;color:var(--amber);font-family:'JetBrains Mono',monospace;margin-bottom:.4rem">👤 ${highlight(r.cliente, q)}</div>` : ''}
+    ${r.versao&&r.status==='resolvida' ? `<div style="font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-bottom:.4rem">📦 Versão ${r.versao}</div>` : ''}
     ${descPreview ? `<div class="card-desc">${highlight(descPreview, q)}</div>` : ''}
     <div class="card-bottom">
       ${r.sql ? '<span class="tag tag-sql">SQL</span>' : ''}
@@ -424,6 +461,16 @@ function abrirDetalhe(id) {
       <div class="modal-sec-title">👤 Cliente</div>
       <div class="modal-text" style="color:var(--amber)">${r.cliente}</div>
     </div>` : ''}
+
+    ${r.nomeInterno ? `<div class="modal-section">
+      <div class="modal-sec-title">🔧 Nome interno da rotina</div>
+      <div class="modal-text" style="color:var(--accent);font-family:'JetBrains Mono',monospace">${r.nomeInterno}</div>
+    </div>` : ''}
+
+    <div class="modal-section">
+      <div class="modal-sec-title">Status</div>
+      ${(()=>{const st=statusInfo(r.status||'sem_paliativo');return `<span style="font-size:12px;padding:3px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:600;background:${st.bg};color:${st.cor};border:1px solid ${st.borda}">${st.icone} ${st.txt}</span>${r.versao&&r.status==='resolvida'?` <span style="font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-left:8px">📦 Versão ${r.versao}</span>`:''}`;})()} 
+    </div>
 
     ${r.problema ? `<div class="modal-section">
       <div class="modal-sec-title">📋 Descrição do problema</div>
@@ -470,10 +517,13 @@ function editarRegistro(id) {
   switchTab('novo');
   document.getElementById('nRedmine').value = r.redmine || '';
   document.getElementById('nTitulo').value = r.titulo || '';
+  document.getElementById('nNomeInterno').value = r.nomeInterno || '';
   document.getElementById('nCliente').value = r.cliente || '';
   document.getElementById('nProblema').value = r.problema || '';
   document.getElementById('nSolucao').value = r.solucao || '';
   document.getElementById('nSQL').value = r.sql || '';
+  document.getElementById('nStatus').value = r.status || 'sem_paliativo';
+  document.getElementById('nVersao').value = r.versao || '';
   editandoId = id;
   const prev = document.getElementById('rmPreview');
   if(r.redmine){ prev.className='rm-preview show'; prev.textContent=`#${r.redmine} — editando`; prev.style.color='var(--amber)'; }
@@ -540,6 +590,16 @@ function limparTudo() {
 }
 
 init();
+
+// Mostrar campo versão só quando resolvida
+document.getElementById('nStatus').addEventListener('change', function() {
+  const wrap = document.getElementById('versaoWrap');
+  const inp = document.getElementById('nVersao');
+  wrap.style.opacity = this.value==='resolvida' ? '1' : '0.35';
+  inp.disabled = this.value!=='resolvida';
+});
+document.getElementById('versaoWrap').style.opacity = '0.35';
+document.getElementById('nVersao').disabled = true;
 </script>
 </body>
 </html>
