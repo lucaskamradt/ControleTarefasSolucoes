@@ -160,6 +160,11 @@ textarea{resize:vertical;min-height:80px;line-height:1.6}
       </div>
 
       <div>
+        <label class="lbl">Cliente</label>
+        <input type="text" id="nCliente" placeholder="Ex: MN Contabilidade, Empresa XYZ...">
+      </div>
+
+      <div>
         <label class="lbl">Descrição detalhada do problema</label>
         <textarea id="nProblema" placeholder="Descreva o problema com detalhes — o que estava acontecendo, qual cliente, qual situação..."></textarea>
       </div>
@@ -298,6 +303,7 @@ async function buscarRedmine() {
 // ── SALVAR REGISTRO ────────────────────────────────────────────────────────
 function salvarRegistro() {
   const titulo = document.getElementById('nTitulo').value.trim();
+  const cliente = document.getElementById('nCliente').value.trim();
   const problema = document.getElementById('nProblema').value.trim();
   const solucao = document.getElementById('nSolucao').value.trim();
   const sql = document.getElementById('nSQL').value.trim();
@@ -308,13 +314,13 @@ function salvarRegistro() {
   if(editandoId) {
     const idx = registros.findIndex(r => r.id === editandoId);
     if(idx >= 0) {
-      registros[idx] = { ...registros[idx], titulo, problema, solucao, sql, redmine, atualizado: new Date().toISOString() };
+      registros[idx] = { ...registros[idx], titulo, cliente, problema, solucao, sql, redmine, atualizado: new Date().toISOString() };
     }
     editandoId = null;
   } else {
     registros.unshift({
       id: Date.now(),
-      titulo, problema, solucao, sql, redmine,
+      titulo, cliente, problema, solucao, sql, redmine,
       criado: new Date().toISOString()
     });
   }
@@ -327,7 +333,7 @@ function salvarRegistro() {
 }
 
 function limparForm() {
-  ['nRedmine','nTitulo','nProblema','nSolucao','nSQL'].forEach(id => {
+  ['nRedmine','nTitulo','nCliente','nProblema','nSolucao','nSQL'].forEach(id => {
     document.getElementById(id).value = '';
   });
   const prev = document.getElementById('rmPreview');
@@ -345,7 +351,7 @@ function buscar() {
   const termos = q.split(/\s+/).filter(Boolean);
 
   const scored = registros.map(r => {
-    const texto = [r.titulo, r.problema, r.solucao, r.sql, r.redmine].join(' ').toLowerCase();
+    const texto = [r.titulo, r.cliente, r.problema, r.solucao, r.sql, r.redmine].join(' ').toLowerCase();
     const score = termos.reduce((acc, t) => {
       const matches = (texto.match(new RegExp(t, 'g')) || []).length;
       // Peso maior se bate no título
@@ -382,6 +388,7 @@ function cardResult(r, q='') {
       ${r.redmine ? `<span class="card-num">#${r.redmine}</span>` : ''}
       <span class="card-titulo">${highlight(r.titulo, q)}</span>
     </div>
+    ${r.cliente ? `<div style="font-size:11px;color:var(--amber);font-family:'JetBrains Mono',monospace;margin-bottom:.4rem">👤 ${highlight(r.cliente, q)}</div>` : ''}
     ${descPreview ? `<div class="card-desc">${highlight(descPreview, q)}</div>` : ''}
     <div class="card-bottom">
       ${r.sql ? '<span class="tag tag-sql">SQL</span>' : ''}
@@ -412,6 +419,11 @@ function abrirDetalhe(id) {
 
   document.getElementById('modalBody').innerHTML = `
     <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:1rem">Registrado em ${data}${atualizado}</div>
+
+    ${r.cliente ? `<div class="modal-section">
+      <div class="modal-sec-title">👤 Cliente</div>
+      <div class="modal-text" style="color:var(--amber)">${r.cliente}</div>
+    </div>` : ''}
 
     ${r.problema ? `<div class="modal-section">
       <div class="modal-sec-title">📋 Descrição do problema</div>
@@ -458,6 +470,7 @@ function editarRegistro(id) {
   switchTab('novo');
   document.getElementById('nRedmine').value = r.redmine || '';
   document.getElementById('nTitulo').value = r.titulo || '';
+  document.getElementById('nCliente').value = r.cliente || '';
   document.getElementById('nProblema').value = r.problema || '';
   document.getElementById('nSolucao').value = r.solucao || '';
   document.getElementById('nSQL').value = r.sql || '';
